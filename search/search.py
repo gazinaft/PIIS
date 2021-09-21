@@ -72,6 +72,15 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+def getPath(parent_map, start, first):
+    path = []
+    current = start
+    while current != first:
+        temp = parent_map[current]
+        path.insert(0, temp[1])
+        current = temp[0]
+    return path
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -86,18 +95,83 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    stack = util.Stack()
+    visited = []
+    parent = problem.getStartState()
+    stack.push(parent)
+    parent_map = {}
+    if problem.isGoalState(parent): return []
+    visited.append(parent)
+
+    while not stack.isEmpty():
+        parent = stack.pop()
+        
+        if problem.isGoalState(parent): 
+            return getPath(parent_map, parent, problem.getStartState())
+
+        children = problem.getSuccessors(parent)
+
+        for child in children:
+            if child[0] in visited: continue
+            visited.append(child[0])
+
+            stack.push(child[0])
+            parent_map[child[0]] = (parent, child[1])
+    return []
+            
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    queue = util.Queue()
+    visited = []
+    parent = problem.getStartState()
+    queue.push(parent)
+    parent_map = {}
+    if problem.isGoalState(parent): return []
+    visited.append(parent)
+
+    while not queue.isEmpty():
+        parent = queue.pop()
+        
+        if problem.isGoalState(parent): 
+            return getPath(parent_map, parent, problem.getStartState())
+
+        children = problem.getSuccessors(parent)
+
+        for child in children:
+            if child[0] in visited: continue
+            visited.append(child[0])
+
+            queue.push(child[0])
+            parent_map[child[0]] = (parent, child[1])
+    return []
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    queue = util.PriorityQueue()
+    visited = []
+    parent = problem.getStartState()
+    queue.push(parent, 0)
+    parent_map = {}
+    if problem.isGoalState(parent): return []
+    visited.append(parent)
+
+    while not queue.isEmpty():
+        parent = queue.pop()
+        
+        if problem.isGoalState(parent): 
+            return getPath(parent_map, parent, problem.getStartState())
+
+        children = problem.getSuccessors(parent)
+
+        for child in children:
+            if child[0] in visited: continue
+            visited.append(child[0])
+
+            queue.push(child[0], child[2])
+            parent_map[child[0]] = (parent, child[1])
+    return []
 
 def nullHeuristic(state, problem=None):
     """
