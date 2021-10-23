@@ -72,15 +72,6 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
-def getPath(parent_map, start, first):
-    path = []
-    current = start
-    while current != first:
-        temp = parent_map[current]
-        path.insert(0, temp[1])
-        current = temp[0]
-    return path
-
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -98,25 +89,23 @@ def depthFirstSearch(problem):
     stack = util.Stack()
     visited = []
     parent = problem.getStartState()
-    stack.push(parent)
-    parent_map = {}
+    stack.push((parent, []))
     if problem.isGoalState(parent): return []
     visited.append(parent)
 
     while not stack.isEmpty():
-        parent = stack.pop()
+        parent, action = stack.pop()
         
         if problem.isGoalState(parent): 
-            return getPath(parent_map, parent, problem.getStartState())
+            return action
 
         children = problem.getSuccessors(parent)
 
         for child in children:
             if child[0] in visited: continue
             visited.append(child[0])
-
-            stack.push(child[0])
-            parent_map[child[0]] = (parent, child[1])
+            stack.push((child[0], action + [child[1]]))
+            
     return []
             
 
@@ -126,25 +115,23 @@ def breadthFirstSearch(problem):
     queue = util.Queue()
     visited = []
     parent = problem.getStartState()
-    queue.push(parent)
-    parent_map = {}
+    queue.push((parent, []))
     if problem.isGoalState(parent): return []
     visited.append(parent)
 
     while not queue.isEmpty():
-        parent = queue.pop()
+        parent, action = queue.pop()
         
         if problem.isGoalState(parent): 
-            return getPath(parent_map, parent, problem.getStartState())
+            return action
 
         children = problem.getSuccessors(parent)
 
         for child in children:
             if child[0] in visited: continue
             visited.append(child[0])
-
-            queue.push(child[0])
-            parent_map[child[0]] = (parent, child[1])
+            queue.push((child[0], action + [child[1]]))
+            
     return []
 
 def uniformCostSearch(problem):
@@ -152,25 +139,24 @@ def uniformCostSearch(problem):
     queue = util.PriorityQueue()
     visited = []
     parent = problem.getStartState()
-    queue.push(parent, 0)
-    parent_map = {}
+    queue.push((parent, []), 0)
     if problem.isGoalState(parent): return []
     visited.append(parent)
 
     while not queue.isEmpty():
-        parent = queue.pop()
+        parent, action = queue.pop()
         
         if problem.isGoalState(parent): 
-            return getPath(parent_map, parent, problem.getStartState())
+            return action
 
         children = problem.getSuccessors(parent)
 
         for child in children:
             if child[0] in visited: continue
             visited.append(child[0])
-
-            queue.push(child[0], child[2])
-            parent_map[child[0]] = (parent, child[1])
+            acts = action + [child[1]]
+            queue.push((child[0], acts), problem.getCostOfActions(acts))
+            
     return []
 
 def nullHeuristic(state, problem=None):
@@ -182,8 +168,30 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    queue = util.PriorityQueue()
+    visited = []
+    parent = problem.getStartState()
+    queue.push((parent, []), 0)
+    if problem.isGoalState(parent): return []
+    visited.append(parent)
+
+    while not queue.isEmpty():
+        parent, action = queue.pop()
+        
+        if problem.isGoalState(parent): 
+            return action
+
+        children = problem.getSuccessors(parent)
+
+        for child in children:
+            coords = child[0]
+            if coords in visited: continue
+            visited.append(coords)
+            acts = action + [child[1]]
+            cost = problem.getCostOfActions(acts) + heuristic(coords, problem)
+            queue.push((coords, acts), cost)
+            
+    return []
 
 
 # Abbreviations
