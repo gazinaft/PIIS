@@ -40,6 +40,7 @@ from game import Actions
 import util
 import time
 import search
+from math import sqrt
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -294,14 +295,14 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        "*** YOUR CODE HERE ***"
+        return (self.startingPosition, [False, False, False, False])
         util.raiseNotDefined()
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
-        "*** YOUR CODE HERE ***"
+        return all(state[1])
         util.raiseNotDefined()
 
     def getSuccessors(self, state):
@@ -319,13 +320,17 @@ class CornersProblem(search.SearchProblem):
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
-
-            "*** YOUR CODE HERE ***"
-
+            x,y = state[0]
+            newcorns = state[1].copy()
+            dx, dy = Actions.directionToVector(action)
+            nextpoint = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextpoint[0]][nextpoint[1]]
+            if hitsWall: continue            
+            for corner in self.corners:
+                if corner == nextpoint:
+                    newcorns[self.corners.index(corner)] = True
+            successors.append(((nextpoint, newcorns), action, 1))
+            
         self._expanded += 1 # DO NOT CHANGE
         return successors
 
@@ -359,7 +364,21 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    "*** YOUR CODE HERE ***"
+    pos, cornB = state
+    lengs = []
+    count = 0
+    for i in range(len(cornB)):
+        if (cornB[i]): continue
+        count += 1
+        x1, y1 = pos
+        x2, y2 = corners[i]
+        lengs.append(2 * abs(x1 - x2) + abs(y1 - y2))
+        # lengs.append((x1 - x2) ** 2 + (y1 - y2) ** 2)
+            # 0.5 * walls[round((x1 + x2 - 3) / 2)][ round((y1 + y2 - 3) / 2)] -
+            # 0.5 * walls[round((x1 + x2) / 2)][ round((y1 + y2) / 2)])
+
+    if len(lengs) > 0: return sum(lengs)/count      # min(lengs)
+    else: return 0
     return 0 # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
