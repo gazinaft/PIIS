@@ -43,6 +43,9 @@ from game import GameStateData
 from game import Game
 from game import Directions
 from game import Actions
+from ghostAgents import DirectionalGhost, RandomGhost
+from pacmanAgent import MiniMaxAgent
+from pacmanAgent import ExpectimaxAgent
 from util import nearestPoint
 from util import manhattanDistance
 import util, layout
@@ -70,6 +73,7 @@ class GameState:
         """
         Generates a new state by copying information from its predecessor.
         """
+        self.stepToGet = None
         if prevState != None: # Initial state
             self.data = GameStateData(prevState.data)
         else:
@@ -94,18 +98,7 @@ class GameState:
     # static variable keeps track of which states have had getLegalActions called
 
 
-    def getLegalActions( self, agentIndex=0 ):
-        """
-        Returns the legal actions for the agent specified.
-        """
-        if self.isWin() or self.isLose(): return []
-
-        if agentIndex == 0:  # Pacman is moving
-            return PacmanRules.getLegalActions( self )
-        else:
-            return GhostRules.getLegalActions( self, agentIndex )
-
-    def generateSuccessor( self, agentIndex, action):
+    def generateSuccessor( self, agentIndex: int, action):
         """
         Returns the successor state after the specified agent takes the action.
         """
@@ -114,7 +107,7 @@ class GameState:
 
         # Copy current state
         state = GameState(self)
-
+        state.stepToGet = action
         # Let agent's logic deal with its action's effects on the board
         if agentIndex == 0:  # Pacman is moving
             state.data._eaten = [False for i in range(state.getNumAgents())]
@@ -268,6 +261,9 @@ SCARED_TIME = 40    # Moves ghosts are scared
 COLLISION_TOLERANCE = 0.7 # How close ghosts must be to Pacman to kill
 TIME_PENALTY = 1 # Number of points lost each round
 
+SCATTER_GHOSTS = 2
+CHASE_GHOSTS = 2
+
 class ClassicGameRules:
     """
     These game rules manage the control flow of a game, deciding when
@@ -276,7 +272,11 @@ class ClassicGameRules:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def newGame( self, layout, pacmanAgent, ghostAgents, display, quiet = False, catchExceptions=False):
+    def newGame( self, layout, _pacmanAgent, _ghostAgents, display, quiet = False, catchExceptions=False):
+        ghostAgents = [RandomGhost(1), RandomGhost(2), DirectionalGhost(3), DirectionalGhost(4)]
+        pacmanAgent = MiniMaxAgent(0)
+
+
         agents = [pacmanAgent] + ghostAgents[:layout.getNumGhosts()]
         initState = GameState()
         initState.initialize( layout, len(ghostAgents) )
@@ -376,6 +376,7 @@ class PacmanRules:
                 state.data._win = True
         # Eat capsule
         if( position in state.getCapsules() ):
+            state.data.scoreChange += 5
             state.data.capsules.remove( position )
             state.data._capsuleEaten = position
             # Reset all ghosts' scared timers
@@ -647,18 +648,12 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         else:
             gameDisplay = display
             rules.quiet = False
-        game = rules.newGame( layout, pacman, ghosts, gameDisplay, beQuiet, catchExceptions)
+        game: Game = rules.newGame( layout, pacman, ghosts, gameDisplay, beQuiet, catchExceptions)
         game.run()
         if not beQuiet: games.append(game)
 
-        if record:
-            import time, pickle
-            fname = ('recorded-game-%d' % (i + 1)) +  '-'.join([str(t) for t in time.localtime()[1:6]])
-            f = open(fname, 'wb')
-            components = {'layout': layout, 'actions': game.moveHistory}
-            pickle.dump(components, f)
-            f.close()
-
+        
+            
     if (numGames-numTraining) > 0:
         scores = [game.state.getScore() for game in games]
         wins = [game.state.isWin() for game in games]
@@ -667,6 +662,12 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         print('Scores:       ', ', '.join([str(score) for score in scores]))
         print('Win Rate:      %d/%d (%.2f)' % (wins.count(True), len(wins), winRate))
         print('Record:       ', ', '.join([ ['Loss', 'Win'][int(w)] for w in wins]))
+
+    if record:
+        import csv
+        with open('result.csv', 'a', encoding='UTF-8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows([[game.state.getScore(), game.state.isWin(), game.state.getNumAgents() - 1, game.state.data.time, type(game.agents[0]).__name__] for game in games])
 
     return games
 

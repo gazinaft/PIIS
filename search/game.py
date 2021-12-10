@@ -383,6 +383,7 @@ class GameStateData:
             self.layout = prevState.layout
             self._eaten = prevState._eaten
             self.score = prevState.score
+            self.time = prevState.time + 1
 
         self._foodEaten = None
         self._foodAdded = None
@@ -496,6 +497,7 @@ class GameStateData:
         self.layout = layout
         self.score = 0
         self.scoreChange = 0
+        self.time = 0
 
         self.agentStates = []
         numGhosts = 0

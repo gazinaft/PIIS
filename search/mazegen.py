@@ -242,6 +242,7 @@ if __name__ == "__main__":
     count = -1
     done = False
     mid = int(tileMap.h/2)
+    capsuleCount = 4
     # reflect the first 14 columns and add pacman in the middle of free lane
     for line in str(tileMap).splitlines():
         count += 1

@@ -40,7 +40,6 @@ from game import Actions
 import util
 import time
 import search
-from math import sqrt
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
