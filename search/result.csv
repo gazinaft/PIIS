@@ -1,4 +1,4 @@
-Score,Win,Ghosts,Time, Agent
+Score,Win,Ghosts,Time,Agent
 311.0,False,4,843,ExpectimaxAgent
 -401.0,False,4,52,ExpectimaxAgent
 -365.0,False,4,73,ExpectimaxAgent
